@@ -592,8 +592,13 @@
             const container = document.getElementById('alarmIndicators');
             container.innerHTML = ''; // Clear existing indicators
 
+            const now = new Date();
+            const currentHour = now.getHours();
+
             // Group alarms by hour (in 12-hour format for the clock)
             const alarmsByHour = {};
+            const alarmsByMinute = {};
+
             alarms.forEach(alarm => {
                 if (!alarm.color) {
                     alarm.color = generateAlarmColor();
@@ -603,12 +608,22 @@
                     alarmsByHour[hour12] = [];
                 }
                 alarmsByHour[hour12].push(alarm);
+
+                // Also group by minute segment if alarm is in current hour
+                if (alarm.hour === currentHour) {
+                    const minuteSegment = Math.floor(alarm.minute / 5);
+                    if (!alarmsByMinute[minuteSegment]) {
+                        alarmsByMinute[minuteSegment] = [];
+                    }
+                    alarmsByMinute[minuteSegment].push(alarm);
+                }
             });
 
-            // Create indicator dots for each hour with alarms
-            const segmentAngle = 360 / 12; // 30 degrees per hour
-            const indicatorRadius = 210; // Position between inner and outer radius
+            const segmentAngle = 360 / 12; // 30 degrees per segment
+            const hourIndicatorRadius = 210; // Position on hour ring
+            const minuteIndicatorRadius = 95; // Position on minute ring
 
+            // Create indicator dots for hour segments
             Object.keys(alarmsByHour).forEach(hour => {
                 const hourIndex = parseInt(hour);
                 const alarmsAtThisHour = alarmsByHour[hour];
@@ -618,7 +633,7 @@
 
                 // If multiple alarms at same hour, stack them slightly
                 alarmsAtThisHour.forEach((alarm, index) => {
-                    const offsetRadius = indicatorRadius + (index * 12); // Offset if multiple alarms
+                    const offsetRadius = hourIndicatorRadius + (index * 12);
                     const dotX = centerX + offsetRadius * Math.cos(angle);
                     const dotY = centerY + offsetRadius * Math.sin(angle);
 
@@ -626,6 +641,30 @@
                     dot.setAttribute('cx', dotX);
                     dot.setAttribute('cy', dotY);
                     dot.setAttribute('r', 6);
+                    dot.setAttribute('class', 'alarm-indicator-dot');
+                    dot.setAttribute('fill', alarm.color);
+                    container.appendChild(dot);
+                });
+            });
+
+            // Create indicator dots for minute segments (only for current hour)
+            Object.keys(alarmsByMinute).forEach(minuteSegment => {
+                const segmentIndex = parseInt(minuteSegment);
+                const alarmsAtThisMinute = alarmsByMinute[minuteSegment];
+
+                // Calculate position for this minute segment
+                const angle = (segmentIndex * segmentAngle - 90) * Math.PI / 180;
+
+                // If multiple alarms at same minute segment, stack them slightly
+                alarmsAtThisMinute.forEach((alarm, index) => {
+                    const offsetRadius = minuteIndicatorRadius + (index * 10);
+                    const dotX = centerX + offsetRadius * Math.cos(angle);
+                    const dotY = centerY + offsetRadius * Math.sin(angle);
+
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', dotX);
+                    dot.setAttribute('cy', dotY);
+                    dot.setAttribute('r', 5);
                     dot.setAttribute('class', 'alarm-indicator-dot');
                     dot.setAttribute('fill', alarm.color);
                     container.appendChild(dot);
@@ -1122,6 +1161,8 @@
                 // Round minutes to nearest 5-minute interval for alarm checking
                 const roundedMinutes = Math.floor(minutes / 5) * 5;
                 checkAlarms(fullHours, roundedMinutes);
+                // Update alarm indicators when minute changes (to show/hide minute indicators)
+                renderAlarmIndicators();
             }
         }
 
