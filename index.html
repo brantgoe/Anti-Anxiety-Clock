@@ -829,26 +829,39 @@
             document.getElementById('loginScreen').classList.remove('hidden');
         }
 
-        // Generate a random color (excluding red, yellow, green)
+        // Predefined distinct color palette (excluding red, yellow, green)
+        const distinctColors = [
+            'hsl(200, 80%, 50%)',  // Bright blue
+            'hsl(280, 70%, 55%)',  // Purple
+            'hsl(320, 75%, 50%)',  // Magenta
+            'hsl(180, 70%, 45%)',  // Cyan
+            'hsl(260, 65%, 60%)',  // Light purple
+            'hsl(300, 70%, 50%)',  // Pink
+            'hsl(190, 75%, 45%)',  // Teal
+            'hsl(270, 75%, 50%)',  // Violet
+            'hsl(210, 70%, 55%)',  // Sky blue
+            'hsl(330, 70%, 55%)',  // Hot pink
+            'hsl(240, 65%, 55%)',  // Indigo
+            'hsl(170, 65%, 45%)',  // Turquoise
+        ];
+
+        // Generate a distinct color for a new alarm
         function generateAlarmColor() {
-            // Exclude: Red (0-15, 345-360), Yellow (40-60), Green (80-160)
-            const excludedRanges = [
-                [0, 15], [40, 60], [80, 160], [345, 360]
-            ];
+            // Get colors already in use
+            const usedColors = alarms.map(alarm => alarm.color).filter(c => c);
 
-            let hue;
-            let attempts = 0;
-            do {
-                hue = Math.floor(Math.random() * 360);
-                attempts++;
-                if (attempts > 100) break; // Safety fallback
-            } while (excludedRanges.some(range => hue >= range[0] && hue <= range[1]));
+            // Find first unused color from palette
+            for (let color of distinctColors) {
+                if (!usedColors.includes(color)) {
+                    return color;
+                }
+            }
 
-            // Use high saturation and medium lightness for vibrant colors
-            const saturation = 70 + Math.random() * 20; // 70-90%
-            const lightness = 45 + Math.random() * 15;  // 45-60%
+            // If all palette colors are used, find the color with maximum difference
+            // from existing colors (fallback for many alarms)
+            let bestColor = distinctColors[alarms.length % distinctColors.length];
 
-            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            return bestColor;
         }
 
         // Populate alarm time selectors
