@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anxiety Clock</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+
+        .container {
+            max-width: 1400px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 36px;
+            text-align: center;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .left-panel {
+            flex: 0 0 auto;
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .clock-container {
+            text-align: center;
+        }
+
+        .alarm-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .alarm-controls h2 {
+            margin-top: 0;
+            color: #34495e;
+            font-size: 24px;
+        }
+
+        .login-screen {
+            text-align: center;
+        }
+
+        .login-screen input {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            border: 2px solid #34495e;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 200px;
+        }
+
+        .login-screen button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .login-screen button:hover {
+            background: #2980b9;
+        }
+
+        .logout-btn {
+            padding: 8px 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .alarm-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .alarm-form input,
+        .alarm-form select {
+            padding: 10px;
+            border: 2px solid #34495e;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .alarm-form input[type="text"] {
+            min-width: 200px;
+        }
+
+        .alarm-form button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .alarm-form button:hover {
+            background: #2980b9;
+        }
+
+        .alarm-list {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .alarm-list h2 {
+            margin-top: 0;
+            color: #34495e;
+            font-size: 24px;
+        }
+
+        .alarm-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: #ecf0f1;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+
+        .alarm-item.disabled {
+            opacity: 0.5;
+            border-left-color: #95a5a6;
+        }
+
+        .alarm-item.triggered {
+            background: #e74c3c;
+            color: white;
+            border-left-color: #c0392b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .alarm-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .alarm-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .alarm-time {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .alarm-item.triggered .alarm-time {
+            color: white;
+        }
+
+        .alarm-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .alarm-actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #2ecc71;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .ack-btn {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .ack-btn:hover {
+            background: #27ae60;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .no-alarms {
+            color: #95a5a6;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        #clock {
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .segment {
+            transition: fill 0.3s ease;
+        }
+
+        .hour-segment {
+            fill: #ecf0f1;
+            stroke: #34495e;
+            stroke-width: 2;
+        }
+
+        .hour-segment.active {
+            fill: #2ecc71;
+        }
+
+        .hour-segment.warning {
+            fill: #f1c40f;
+        }
+
+        .minute-segment {
+            fill: #bdc3c7;
+            stroke: #34495e;
+            stroke-width: 1.5;
+        }
+
+        .minute-segment.active {
+            fill: #2ecc71;
+        }
+
+        .minute-segment.warning {
+            fill: #f1c40f;
+        }
+
+        .alarm-color-indicator {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+            border: 2px solid #34495e;
+        }
+
+        @keyframes blink-alarm {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .center-circle {
+            fill: #34495e;
+        }
+
+        .am-pm-indicator {
+            fill: white;
+            font-size: 32px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        .am-pm-indicator.hidden {
+            display: none;
+        }
+
+        .time-format-selector {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .time-format-selector label {
+            display: block;
+            margin-bottom: 10px;
+            color: #34495e;
+            font-weight: bold;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .radio-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+        }
+
+        .radio-group input[type="radio"] {
+            cursor: pointer;
+        }
+
+        .segment-label {
+            fill: #34495e;
+            font-size: 24px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        .minute-label {
+            fill: #34495e;
+            font-size: 18px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        .alarm-indicator-dot {
+            stroke: #34495e;
+            stroke-width: 2;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Anxiety Clock</h1>
+
+        <div class="main-content">
+            <!-- Left Panel: Clock -->
+            <div class="left-panel">
+                <div class="clock-container">
+                    <svg id="clock" width="600" height="600" viewBox="0 0 600 600">
+                        <!-- Hour segments (outer ring) -->
+                        <g id="hourSegments"></g>
+
+                        <!-- Minute segments (inner ring) -->
+                        <g id="minuteSegments"></g>
+
+                        <!-- Hour labels (outside) -->
+                        <g id="hourLabels"></g>
+
+                        <!-- Minute labels -->
+                        <g id="minuteLabels"></g>
+
+                        <!-- Center circle -->
+                        <circle cx="300" cy="300" r="60" class="center-circle"/>
+
+                        <!-- Alarm indicators -->
+                        <g id="alarmIndicators"></g>
+
+                        <!-- AM/PM Indicator -->
+                        <text id="amPmIndicator" x="300" y="305" class="am-pm-indicator">AM</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Right Panel: Alarms -->
+            <div class="right-panel">
+                <div class="alarm-list">
+                    <h2>Alarms</h2>
+                    <div id="alarmListContainer">
+                        <div class="no-alarms">No alarms set</div>
+                    </div>
+                </div>
+
+                <div class="alarm-controls">
+                    <div id="loginScreen" class="login-screen">
+                        <h2>Admin Access</h2>
+                        <p>Login to add or delete alarms</p>
+                        <input type="password" id="adminPassword" placeholder="Password">
+                        <button onclick="login()">Login</button>
+                    </div>
+
+                    <div id="alarmFormSection" class="hidden">
+                        <h2>Add Alarm</h2>
+                        <div class="alarm-form">
+                            <select id="alarmHour">
+                                <option value="">Hour</option>
+                            </select>
+                            <select id="alarmMinute">
+                                <option value="">Minute</option>
+                            </select>
+                            <select id="alarmPeriod" class="hidden">
+                                <option value="">AM/PM</option>
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                            <input type="text" id="alarmName" placeholder="Alarm name">
+                            <button onclick="addAlarm()">Add Alarm</button>
+                        </div>
+
+                        <div class="time-format-selector">
+                            <label>Time Format:</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="timeFormat" value="12" checked onchange="changeTimeFormat('12')">
+                                    12-hour
+                                </label>
+                                <label>
+                                    <input type="radio" name="timeFormat" value="24" onchange="changeTimeFormat('24')">
+                                    24-hour
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="logout-btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const centerX = 300;
+        const centerY = 300;
+        const outerRadius = 240;
+        const innerRadius = 180;
+        const middleRadius = 120;
+        const innerInnerRadius = 65;
+        const hourLabelRadius = 270;
+        const minuteLabelRadius = 150;
+
+        // Load alarms from localStorage
+        let alarms = JSON.parse(localStorage.getItem('alarms')) || [];
+
+        // Password for alarm management (change this to your desired password)
+        const ADMIN_PASSWORD = '1234';
+        let isLoggedIn = false;
+
+        // Time format preference (12 or 24 hour)
+        let timeFormat = localStorage.getItem('timeFormat') || '12';
+
+        // Create hour segments (12 segments for 12 hours)
+        function createHourSegments() {
+            const container = document.getElementById('hourSegments');
+            const labelContainer = document.getElementById('hourLabels');
+            const segmentAngle = 360 / 12; // 30 degrees per hour
+
+            for (let i = 0; i < 12; i++) {
+                const startAngle = i * segmentAngle - 90; // -90 to start at top
+                const endAngle = (i + 1) * segmentAngle - 90;
+
+                const path = createSegmentPath(
+                    centerX, centerY,
+                    innerRadius, outerRadius,
+                    startAngle, endAngle
+                );
+
+                const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathElement.setAttribute('d', path);
+                pathElement.setAttribute('class', 'segment hour-segment');
+                pathElement.setAttribute('data-hour', i);
+                container.appendChild(pathElement);
+
+                // Add label at hour position (like traditional clock)
+                const hourNumber = i === 0 ? 12 : i;
+                const labelAngle = (i * segmentAngle - 90) * Math.PI / 180;
+                const labelX = centerX + hourLabelRadius * Math.cos(labelAngle);
+                const labelY = centerY + hourLabelRadius * Math.sin(labelAngle);
+
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', labelX);
+                label.setAttribute('y', labelY);
+                label.setAttribute('class', 'segment-label');
+                label.setAttribute('data-hour-index', i);
+                label.textContent = hourNumber;
+                labelContainer.appendChild(label);
+            }
+        }
+
+        // Update hour labels for 24-hour mode
+        function updateHourLabels(isPM) {
+            const hourLabels = document.querySelectorAll('.segment-label');
+            hourLabels.forEach((label, i) => {
+                if (timeFormat === '24') {
+                    // In 24-hour mode, show 0-11 for AM, 24,13-23 for PM
+                    if (isPM) {
+                        // PM: show 24,13-23
+                        label.textContent = i === 0 ? 24 : i + 12;
+                    } else {
+                        // AM: show 0-11
+                        label.textContent = i === 0 ? 0 : i;
+                    }
+                } else {
+                    // In 12-hour mode, always show 1-12
+                    label.textContent = i === 0 ? 12 : i;
+                }
+            });
+        }
+
+        // Render alarm indicator dots on the clock
+        function renderAlarmIndicators() {
+            const container = document.getElementById('alarmIndicators');
+            container.innerHTML = ''; // Clear existing indicators
+
+            // Group alarms by hour (in 12-hour format for the clock)
+            const alarmsByHour = {};
+            alarms.forEach(alarm => {
+                if (!alarm.color) {
+                    alarm.color = generateAlarmColor();
+                }
+                const hour12 = alarm.hour % 12;
+                if (!alarmsByHour[hour12]) {
+                    alarmsByHour[hour12] = [];
+                }
+                alarmsByHour[hour12].push(alarm);
+            });
+
+            // Create indicator dots for each hour with alarms
+            const segmentAngle = 360 / 12; // 30 degrees per hour
+            const indicatorRadius = 210; // Position between inner and outer radius
+
+            Object.keys(alarmsByHour).forEach(hour => {
+                const hourIndex = parseInt(hour);
+                const alarmsAtThisHour = alarmsByHour[hour];
+
+                // Calculate position for this hour
+                const angle = (hourIndex * segmentAngle - 90) * Math.PI / 180;
+
+                // If multiple alarms at same hour, stack them slightly
+                alarmsAtThisHour.forEach((alarm, index) => {
+                    const offsetRadius = indicatorRadius + (index * 12); // Offset if multiple alarms
+                    const dotX = centerX + offsetRadius * Math.cos(angle);
+                    const dotY = centerY + offsetRadius * Math.sin(angle);
+
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', dotX);
+                    dot.setAttribute('cy', dotY);
+                    dot.setAttribute('r', 6);
+                    dot.setAttribute('class', 'alarm-indicator-dot');
+                    dot.setAttribute('fill', alarm.color);
+                    container.appendChild(dot);
+                });
+            });
+        }
+
+        // Create minute segments (12 segments for 5-minute intervals)
+        function createMinuteSegments() {
+            const container = document.getElementById('minuteSegments');
+            const labelContainer = document.getElementById('minuteLabels');
+            const segmentAngle = 360 / 12; // 30 degrees per 5-minute segment
+
+            for (let i = 0; i < 12; i++) {
+                const startAngle = i * segmentAngle - 90;
+                const endAngle = (i + 1) * segmentAngle - 90;
+
+                const path = createSegmentPath(
+                    centerX, centerY,
+                    innerInnerRadius, middleRadius,
+                    startAngle, endAngle
+                );
+
+                const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathElement.setAttribute('d', path);
+                pathElement.setAttribute('class', 'segment minute-segment');
+                pathElement.setAttribute('data-minute', i * 5);
+                container.appendChild(pathElement);
+
+                // Add label at minute position (like traditional clock)
+                const labelAngle = (i * segmentAngle - 90) * Math.PI / 180;
+                const labelX = centerX + minuteLabelRadius * Math.cos(labelAngle);
+                const labelY = centerY + minuteLabelRadius * Math.sin(labelAngle);
+
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', labelX);
+                label.setAttribute('y', labelY);
+                label.setAttribute('class', 'minute-label');
+                label.textContent = i * 5;
+                labelContainer.appendChild(label);
+            }
+        }
+
+        // Helper function to create SVG path for a segment
+        function createSegmentPath(cx, cy, innerR, outerR, startAngle, endAngle) {
+            const startAngleRad = startAngle * Math.PI / 180;
+            const endAngleRad = endAngle * Math.PI / 180;
+
+            // Outer arc points
+            const x1 = cx + outerR * Math.cos(startAngleRad);
+            const y1 = cy + outerR * Math.sin(startAngleRad);
+            const x2 = cx + outerR * Math.cos(endAngleRad);
+            const y2 = cy + outerR * Math.sin(endAngleRad);
+
+            // Inner arc points
+            const x3 = cx + innerR * Math.cos(endAngleRad);
+            const y3 = cy + innerR * Math.sin(endAngleRad);
+            const x4 = cx + innerR * Math.cos(startAngleRad);
+            const y4 = cy + innerR * Math.sin(startAngleRad);
+
+            const largeArcFlag = (endAngle - startAngle) > 180 ? 1 : 0;
+
+            return `
+                M ${x1} ${y1}
+                A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${x2} ${y2}
+                L ${x3} ${y3}
+                A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${x4} ${y4}
+                Z
+            `;
+        }
+
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours() % 12; // Convert to 12-hour format
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // Calculate which 5-minute segment we're in
+            const minuteSegment = Math.floor(minutes / 5);
+
+            // Check if we're in the last minute of a 5-minute segment (minute 4, 9, 14, etc.)
+            const isLastMinuteOfSegment = (minutes % 5) === 4;
+
+            // Check if we're in the last 5 minutes of an hour (55-59 minutes)
+            const isLastFiveMinutes = minutes >= 55;
+
+            // Update hour segments
+            const hourSegments = document.querySelectorAll('.hour-segment');
+            hourSegments.forEach((segment, index) => {
+                segment.classList.remove('active', 'warning');
+                if (index === hours) {
+                    if (isLastFiveMinutes) {
+                        segment.classList.add('warning');
+                    } else {
+                        segment.classList.add('active');
+                    }
+                }
+            });
+
+            // Update minute segments
+            const minuteSegments = document.querySelectorAll('.minute-segment');
+            minuteSegments.forEach((segment, index) => {
+                segment.classList.remove('active', 'warning');
+                if (index === minuteSegment) {
+                    if (isLastMinuteOfSegment) {
+                        segment.classList.add('warning');
+                    } else {
+                        segment.classList.add('active');
+                    }
+                }
+            });
+        }
+
+        // Change time format
+        function changeTimeFormat(format) {
+            timeFormat = format;
+            localStorage.setItem('timeFormat', format);
+
+            // Update AM/PM indicator visibility
+            const amPmIndicator = document.getElementById('amPmIndicator');
+            if (format === '24') {
+                amPmIndicator.classList.add('hidden');
+            } else {
+                amPmIndicator.classList.remove('hidden');
+            }
+
+            // Update hour labels immediately
+            const now = new Date();
+            const isPM = now.getHours() >= 12;
+            updateHourLabels(isPM);
+
+            // Repopulate time selectors with new format
+            populateTimeSelectors();
+
+            // Re-render alarms with new format
+            renderAlarms();
+        }
+
+        // Login function
+        function login() {
+            const password = document.getElementById('adminPassword').value;
+
+            if (password === ADMIN_PASSWORD) {
+                isLoggedIn = true;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('alarmFormSection').classList.remove('hidden');
+                document.getElementById('adminPassword').value = '';
+
+                // Set the radio button to saved preference
+                document.querySelector(`input[name="timeFormat"][value="${timeFormat}"]`).checked = true;
+            } else {
+                alert('Incorrect password');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        // Logout function
+        function logout() {
+            isLoggedIn = false;
+            document.getElementById('alarmFormSection').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        // Generate a random color (excluding red, yellow, green)
+        function generateAlarmColor() {
+            // Exclude: Red (0-15, 345-360), Yellow (40-60), Green (80-160)
+            const excludedRanges = [
+                [0, 15], [40, 60], [80, 160], [345, 360]
+            ];
+
+            let hue;
+            let attempts = 0;
+            do {
+                hue = Math.floor(Math.random() * 360);
+                attempts++;
+                if (attempts > 100) break; // Safety fallback
+            } while (excludedRanges.some(range => hue >= range[0] && hue <= range[1]));
+
+            // Use high saturation and medium lightness for vibrant colors
+            const saturation = 70 + Math.random() * 20; // 70-90%
+            const lightness = 45 + Math.random() * 15;  // 45-60%
+
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+
+        // Populate alarm time selectors
+        function populateTimeSelectors() {
+            const hourSelect = document.getElementById('alarmHour');
+            const minuteSelect = document.getElementById('alarmMinute');
+            const periodSelect = document.getElementById('alarmPeriod');
+
+            // Clear existing options (except first placeholder)
+            hourSelect.innerHTML = '<option value="">Hour</option>';
+            minuteSelect.innerHTML = '<option value="">Minute</option>';
+
+            // Add hours based on time format
+            if (timeFormat === '12') {
+                // 12-hour format: 1-12
+                for (let i = 1; i <= 12; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = String(i);
+                    hourSelect.appendChild(option);
+                }
+                // Show AM/PM selector
+                periodSelect.classList.remove('hidden');
+            } else {
+                // 24-hour format: 0-23
+                for (let i = 0; i < 24; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = String(i).padStart(2, '0');
+                    hourSelect.appendChild(option);
+                }
+                // Hide AM/PM selector
+                periodSelect.classList.add('hidden');
+            }
+
+            // Add minutes (0, 5, 10, 15, ... 55)
+            for (let i = 0; i < 60; i += 5) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = String(i).padStart(2, '0');
+                minuteSelect.appendChild(option);
+            }
+        }
+
+        // Add alarm
+        function addAlarm() {
+            const hourValue = document.getElementById('alarmHour').value;
+            const minute = document.getElementById('alarmMinute').value;
+            const name = document.getElementById('alarmName').value.trim();
+            const period = document.getElementById('alarmPeriod').value;
+
+            // Validate fields
+            if (!hourValue || !minute || !name) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            // In 12-hour mode, also check for AM/PM selection
+            if (timeFormat === '12' && !period) {
+                alert('Please select AM or PM');
+                return;
+            }
+
+            // Convert to 24-hour format for storage
+            let hour24 = parseInt(hourValue);
+            if (timeFormat === '12') {
+                if (period === 'AM') {
+                    // 12 AM = 0 hours, 1-11 AM stay the same
+                    hour24 = hour24 === 12 ? 0 : hour24;
+                } else { // PM
+                    // 12 PM = 12 hours, 1-11 PM add 12
+                    hour24 = hour24 === 12 ? 12 : hour24 + 12;
+                }
+            }
+
+            const alarm = {
+                id: Date.now(),
+                hour: hour24,
+                minute: parseInt(minute),
+                name: name,
+                enabled: true,
+                triggered: false,
+                color: generateAlarmColor()
+            };
+
+            alarms.push(alarm);
+            localStorage.setItem('alarms', JSON.stringify(alarms));
+
+            // Reset form
+            document.getElementById('alarmHour').value = '';
+            document.getElementById('alarmMinute').value = '';
+            document.getElementById('alarmName').value = '';
+            document.getElementById('alarmPeriod').value = '';
+
+            renderAlarms();
+            renderAlarmIndicators();
+        }
+
+        // Delete alarm
+        function deleteAlarm(id) {
+            alarms = alarms.filter(alarm => alarm.id !== id);
+            localStorage.setItem('alarms', JSON.stringify(alarms));
+            renderAlarms();
+            renderAlarmIndicators();
+        }
+
+        // Toggle alarm on/off
+        function toggleAlarm(id) {
+            const alarm = alarms.find(a => a.id === id);
+            if (alarm) {
+                alarm.enabled = !alarm.enabled;
+                localStorage.setItem('alarms', JSON.stringify(alarms));
+                renderAlarms();
+            }
+        }
+
+        // Acknowledge alarm
+        function acknowledgeAlarm(id) {
+            const alarm = alarms.find(a => a.id === id);
+            if (alarm) {
+                alarm.triggered = false;
+                localStorage.setItem('alarms', JSON.stringify(alarms));
+                renderAlarms();
+            }
+        }
+
+        // Format time based on current format setting
+        function formatTime(hour, minute) {
+            if (timeFormat === '24') {
+                return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+            } else {
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const hour12 = hour % 12 || 12;
+                return `${String(hour12).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${period}`;
+            }
+        }
+
+        // Render alarms list
+        function renderAlarms() {
+            const container = document.getElementById('alarmListContainer');
+
+            if (alarms.length === 0) {
+                container.innerHTML = '<div class="no-alarms">No alarms set</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            alarms.forEach(alarm => {
+                // Ensure alarm has a color (for backward compatibility)
+                if (!alarm.color) {
+                    alarm.color = generateAlarmColor();
+                    localStorage.setItem('alarms', JSON.stringify(alarms));
+                }
+
+                const alarmDiv = document.createElement('div');
+                let className = 'alarm-item';
+                if (alarm.triggered) className += ' triggered';
+                if (!alarm.enabled) className += ' disabled';
+                alarmDiv.className = className;
+
+                const timeStr = formatTime(alarm.hour, alarm.minute);
+
+                alarmDiv.innerHTML = `
+                    <div class="alarm-info">
+                        <div class="alarm-name">
+                            <span class="alarm-color-indicator" style="background-color: ${alarm.color};"></span>
+                            ${alarm.name}
+                        </div>
+                        <div class="alarm-time">${timeStr}</div>
+                    </div>
+                    <div class="alarm-actions">
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${alarm.enabled ? 'checked' : ''} onchange="toggleAlarm(${alarm.id})">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        ${alarm.triggered ? '<button class="ack-btn" onclick="acknowledgeAlarm(' + alarm.id + ')">Acknowledge</button>' : ''}
+                        ${isLoggedIn ? '<button class="delete-btn" onclick="deleteAlarm(' + alarm.id + ')">Delete</button>' : ''}
+                    </div>
+                `;
+
+                container.appendChild(alarmDiv);
+            });
+        }
+
+        // Check alarms
+        function checkAlarms(hours, minutes) {
+            alarms.forEach(alarm => {
+                if (alarm.enabled && alarm.hour === hours && alarm.minute === minutes && !alarm.triggered) {
+                    alarm.triggered = true;
+                    localStorage.setItem('alarms', JSON.stringify(alarms));
+                    renderAlarms();
+                }
+            });
+        }
+
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const fullHours = now.getHours();
+            const seconds = now.getSeconds();
+            const isPM = fullHours >= 12;
+
+            // Update AM/PM indicator
+            const amPmIndicator = document.getElementById('amPmIndicator');
+            if (timeFormat === '12') {
+                const amPm = isPM ? 'PM' : 'AM';
+                amPmIndicator.textContent = amPm;
+                amPmIndicator.classList.remove('hidden');
+            } else {
+                amPmIndicator.classList.add('hidden');
+            }
+
+            // Update hour labels for 24-hour mode (only on the hour or when format changes)
+            if (timeFormat === '24' && (seconds === 0 && minutes === 0)) {
+                updateHourLabels(isPM);
+            }
+
+            // Calculate which 5-minute segment we're in
+            const minuteSegment = Math.floor(minutes / 5);
+
+            // Check if we're in the last minute of a 5-minute segment
+            const isLastMinuteOfSegment = (minutes % 5) === 4;
+
+            // Check if we're in the last 5 minutes of an hour
+            const isLastFiveMinutes = minutes >= 55;
+
+            // Calculate current time in total minutes for alarm comparison
+            const currentTotalMinutes = fullHours * 60 + minutes;
+
+            // Find alarms within the next 5 minutes (but not past)
+            const upcomingAlarms = alarms.filter(alarm => {
+                if (!alarm.enabled || alarm.triggered) return false;
+
+                const alarmTotalMinutes = alarm.hour * 60 + alarm.minute;
+                let timeDiff = alarmTotalMinutes - currentTotalMinutes;
+
+                // Handle day wrap-around (e.g., current time 23:58, alarm at 00:02)
+                if (timeDiff < 0) {
+                    timeDiff += 24 * 60; // Add 24 hours in minutes
+                }
+
+                // Check if alarm is within 1-5 minutes in the future (not 0 or past)
+                return timeDiff > 0 && timeDiff <= 5;
+            });
+
+            // Update hour segments
+            const hourSegments = document.querySelectorAll('.hour-segment');
+            hourSegments.forEach((segment, index) => {
+                segment.classList.remove('active', 'warning');
+                segment.style.animation = '';
+                segment.style.fill = '';
+
+                // Check if this hour segment has an upcoming alarm (only if hour doesn't match yet)
+                const alarmsForThisHour = upcomingAlarms.filter(alarm => {
+                    const alarmHour12 = alarm.hour % 12;
+                    // Show on hour segment only if the alarm hour hasn't been reached yet
+                    return alarmHour12 === index && fullHours !== alarm.hour;
+                });
+
+                if (alarmsForThisHour.length > 0) {
+                    // Use the first alarm's color for this segment
+                    const alarmColor = alarmsForThisHour[0].color;
+                    segment.style.fill = alarmColor;
+                    segment.style.animation = `blink-alarm 2s ease-in-out infinite`;
+                }
+
+                if (index === hours) {
+                    if (isLastFiveMinutes) {
+                        segment.classList.add('warning');
+                    } else {
+                        segment.classList.add('active');
+                    }
+                }
+            });
+
+            // Update minute segments
+            const minuteSegments = document.querySelectorAll('.minute-segment');
+            minuteSegments.forEach((segment, index) => {
+                segment.classList.remove('active', 'warning');
+                segment.style.animation = '';
+                segment.style.fill = '';
+
+                // Check if this minute segment has an upcoming alarm (only if hour matches)
+                const alarmsForThisMinute = upcomingAlarms.filter(alarm => {
+                    const alarmMinuteSegment = Math.floor(alarm.minute / 5);
+                    // Show on minute segment only if the alarm hour matches current hour
+                    return alarmMinuteSegment === index && fullHours === alarm.hour;
+                });
+
+                if (alarmsForThisMinute.length > 0) {
+                    // Use the first alarm's color for this segment
+                    const alarmColor = alarmsForThisMinute[0].color;
+                    segment.style.fill = alarmColor;
+                    segment.style.animation = `blink-alarm 2s ease-in-out infinite`;
+                }
+
+                if (index === minuteSegment) {
+                    if (isLastMinuteOfSegment) {
+                        segment.classList.add('warning');
+                    } else {
+                        segment.classList.add('active');
+                    }
+                }
+            });
+
+            // Check alarms only at the start of each minute
+            if (seconds === 0) {
+                // Round minutes to nearest 5-minute interval for alarm checking
+                const roundedMinutes = Math.floor(minutes / 5) * 5;
+                checkAlarms(fullHours, roundedMinutes);
+            }
+        }
+
+        // Initialize
+        populateTimeSelectors();
+        createHourSegments();
+        createMinuteSegments();
+        renderAlarms();
+        renderAlarmIndicators();
+
+        // Apply saved time format on page load
+        const amPmIndicator = document.getElementById('amPmIndicator');
+        if (timeFormat === '24') {
+            amPmIndicator.classList.add('hidden');
+            // Update hour labels for 24-hour mode on page load
+            const now = new Date();
+            const isPM = now.getHours() >= 12;
+            updateHourLabels(isPM);
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
