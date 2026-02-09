@@ -1,0 +1,1 @@
+this is a clock project I had bc of a place that I was in had a clock that pissed me the fuck off. The long term goal is to have this deployable with a server and selecting a room to have the timers set by the master station (not implemented at this revixion) 
