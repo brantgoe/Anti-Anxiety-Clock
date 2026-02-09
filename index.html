@@ -835,6 +835,9 @@
                 document.getElementById('alarmFormSection').classList.remove('hidden');
                 document.getElementById('adminPassword').value = '';
 
+                // Hide the admin toggle button when logged in
+                document.querySelector('.admin-toggle-btn').classList.add('hidden');
+
                 // Set the radio button to saved preference
                 document.querySelector(`input[name="timeFormat"][value="${timeFormat}"]`).checked = true;
 
@@ -851,6 +854,13 @@
             isLoggedIn = false;
             document.getElementById('alarmFormSection').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
+
+            // Show the admin toggle button when logged out
+            document.querySelector('.admin-toggle-btn').classList.remove('hidden');
+
+            // Hide the admin section when logging out
+            document.getElementById('adminSection').classList.add('hidden');
+
             // Re-render alarms to hide delete buttons
             renderAlarms();
         }
