@@ -133,6 +133,23 @@
             min-width: 200px;
         }
 
+        .char-counter {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-align: right;
+            margin-top: 2px;
+            margin-bottom: 8px;
+        }
+
+        .char-counter.warning {
+            color: #e67e22;
+        }
+
+        .char-counter.limit {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
         .alarm-form button {
             padding: 10px 20px;
             background: #3498db;
@@ -504,7 +521,8 @@
                                 <option value="AM">AM</option>
                                 <option value="PM">PM</option>
                             </select>
-                            <input type="text" id="alarmName" placeholder="Alarm name">
+                            <input type="text" id="alarmName" placeholder="Alarm name" maxlength="160" oninput="updateCharCounter()">
+                            <div class="char-counter" id="charCounter">0 / 160</div>
                             <button onclick="addAlarm()">Add Alarm</button>
                         </div>
 
@@ -654,11 +672,17 @@
                 const hourIndex = parseInt(hour);
                 const alarmsAtThisHour = alarmsByHour[hour];
 
-                // Calculate position for this hour
-                const angle = (hourIndex * segmentAngle - 90) * Math.PI / 180;
-
                 // If multiple alarms at same hour, stack them slightly
                 alarmsAtThisHour.forEach((alarm, index) => {
+                    // Position dots based on minute value
+                    // If alarm is at 30+ minutes, place dot halfway between current hour and next hour
+                    // If alarm is at 0-29 minutes, place on the hour line
+                    let angleOffset = 0;
+                    if (alarm.minute >= 30) {
+                        angleOffset = segmentAngle / 2; // Move 15 degrees (half a segment) forward
+                    }
+                    const angle = ((hourIndex * segmentAngle) + angleOffset - 90) * Math.PI / 180;
+
                     const offsetRadius = hourIndicatorRadius + (index * 12);
                     const dotX = centerX + offsetRadius * Math.cos(angle);
                     const dotY = centerY + offsetRadius * Math.sin(angle);
@@ -851,6 +875,9 @@
 
                 // Focus on alarm name input after login
                 document.getElementById('alarmName').focus();
+
+                // Initialize character counter
+                updateCharCounter();
             } else {
                 alert('Incorrect password');
                 document.getElementById('adminPassword').value = '';
@@ -881,6 +908,28 @@
             // If admin section is now visible, focus on password input
             if (!adminSection.classList.contains('hidden')) {
                 document.getElementById('adminPassword').focus();
+            }
+        }
+
+        // Update character counter for alarm name input
+        function updateCharCounter() {
+            const input = document.getElementById('alarmName');
+            const counter = document.getElementById('charCounter');
+            const currentLength = input.value.length;
+            const maxLength = 160;
+
+            counter.textContent = `${currentLength} / ${maxLength}`;
+
+            // Remove all classes first
+            counter.classList.remove('warning', 'limit');
+
+            // Add warning color when approaching limit (140+)
+            if (currentLength >= 140 && currentLength < 160) {
+                counter.classList.add('warning');
+            }
+            // Add limit color when at max
+            else if (currentLength >= 160) {
+                counter.classList.add('limit');
             }
         }
 
@@ -1010,6 +1059,7 @@
             document.getElementById('alarmMinute').value = '';
             document.getElementById('alarmName').value = '';
             document.getElementById('alarmPeriod').value = '';
+            updateCharCounter();
 
             renderAlarms();
             renderAlarmIndicators();
