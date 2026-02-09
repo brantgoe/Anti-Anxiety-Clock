@@ -1183,7 +1183,7 @@
 
             // Find alarms within the next 5 minutes (but not past)
             const upcomingAlarms = alarms.filter(alarm => {
-                if (!alarm.enabled || alarm.triggered) return false;
+                if (!alarm.enabled || alarm.triggered || alarm.acknowledgedAt) return false;
 
                 const alarmTotalMinutes = alarm.hour * 60 + alarm.minute;
                 let timeDiff = alarmTotalMinutes - currentTotalMinutes;
