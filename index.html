@@ -827,6 +827,8 @@
             isLoggedIn = false;
             document.getElementById('alarmFormSection').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
+            // Re-render alarms to hide delete buttons
+            renderAlarms();
         }
 
         // Predefined distinct color palette (excluding red, yellow, green)
