@@ -816,6 +816,9 @@
 
                 // Set the radio button to saved preference
                 document.querySelector(`input[name="timeFormat"][value="${timeFormat}"]`).checked = true;
+
+                // Re-render alarms to show delete buttons
+                renderAlarms();
             } else {
                 alert('Incorrect password');
                 document.getElementById('adminPassword').value = '';
