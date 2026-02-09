@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anxiety Clock</title>
+    <title>Anti Anxiety Clock</title>
     <style>
         body {
             margin: 0;
@@ -456,7 +456,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Anxiety Clock</h1>
+        <h1>Anti Anxiety Clock</h1>
 
         <div class="main-content">
             <!-- Left Panel: Clock -->
@@ -634,8 +634,8 @@
             const now = new Date();
             const currentHour = now.getHours();
 
-            // Group alarms by hour (in 12-hour format for the clock)
-            const alarmsByHour = {};
+            // Group alarms by hour and 15-minute window for proper stacking
+            const alarmsByPosition = {};
             const alarmsByMinute = {};
 
             alarms.forEach(alarm => {
@@ -648,10 +648,16 @@
                     alarm.color = generateAlarmColor();
                 }
                 const hour12 = alarm.hour % 12;
-                if (!alarmsByHour[hour12]) {
-                    alarmsByHour[hour12] = [];
+
+                // Determine 15-minute window (0=0-14, 1=15-29, 2=30-44, 3=45-59)
+                const minuteWindow = Math.floor(alarm.minute / 15);
+
+                // Create composite key: "hour_window" (e.g., "2_1" for 2:15-2:29)
+                const positionKey = `${hour12}_${minuteWindow}`;
+                if (!alarmsByPosition[positionKey]) {
+                    alarmsByPosition[positionKey] = [];
                 }
-                alarmsByHour[hour12].push(alarm);
+                alarmsByPosition[positionKey].push(alarm);
 
                 // Also group by minute segment if alarm is in current hour
                 if (alarm.hour === currentHour) {
@@ -668,18 +674,25 @@
             const minuteIndicatorRadius = 95; // Position on minute ring
 
             // Create indicator dots for hour segments
-            Object.keys(alarmsByHour).forEach(hour => {
-                const hourIndex = parseInt(hour);
-                const alarmsAtThisHour = alarmsByHour[hour];
+            Object.keys(alarmsByPosition).forEach(positionKey => {
+                const [hourStr, minuteWindowStr] = positionKey.split('_');
+                const hourIndex = parseInt(hourStr);
+                const alarmsAtThisPosition = alarmsByPosition[positionKey];
 
-                // If multiple alarms at same hour, stack them slightly
-                alarmsAtThisHour.forEach((alarm, index) => {
-                    // Position dots based on minute value
-                    // If alarm is at 30+ minutes, place dot halfway between current hour and next hour
-                    // If alarm is at 0-29 minutes, place on the hour line
+                // Stack alarms that are at the same position (same hour, same 15-min window)
+                alarmsAtThisPosition.forEach((alarm, index) => {
+                    // Position dots based on minute value in 15-minute increments
+                    // 0-14 min: on the hour line (0 degrees)
+                    // 15-29 min: 1/4 segment forward (7.5 degrees)
+                    // 30-44 min: 1/2 segment forward (15 degrees)
+                    // 45-59 min: 3/4 segment forward (22.5 degrees)
                     let angleOffset = 0;
-                    if (alarm.minute >= 30) {
-                        angleOffset = segmentAngle / 2; // Move 15 degrees (half a segment) forward
+                    if (alarm.minute >= 45) {
+                        angleOffset = segmentAngle * 0.75; // 22.5 degrees
+                    } else if (alarm.minute >= 30) {
+                        angleOffset = segmentAngle * 0.5; // 15 degrees
+                    } else if (alarm.minute >= 15) {
+                        angleOffset = segmentAngle * 0.25; // 7.5 degrees
                     }
                     const angle = ((hourIndex * segmentAngle) + angleOffset - 90) * Math.PI / 180;
 
@@ -947,6 +960,18 @@
             'hsl(330, 70%, 55%)',  // Hot pink
             'hsl(240, 65%, 55%)',  // Indigo
             'hsl(170, 65%, 45%)',  // Turquoise
+            'hsl(290, 65%, 50%)',  // Deep purple
+            'hsl(195, 70%, 50%)',  // Ocean blue
+            'hsl(310, 70%, 55%)',  // Fuchsia
+            'hsl(160, 70%, 40%)',  // Sea green-blue
+            'hsl(220, 75%, 50%)',  // Royal blue
+            'hsl(340, 75%, 55%)',  // Rose
+            'hsl(250, 70%, 55%)',  // Periwinkle
+            'hsl(185, 65%, 45%)',  // Aqua
+            'hsl(275, 65%, 55%)',  // Lavender
+            'hsl(205, 75%, 50%)',  // Cerulean
+            'hsl(315, 70%, 50%)',  // Orchid
+            'hsl(175, 70%, 45%)',  // Mint blue
         ];
 
         // Generate a distinct color for a new alarm
@@ -1137,9 +1162,9 @@
 
                 const timeStr = formatTime(alarm.hour, alarm.minute);
 
-                // Check if alarm is within 5 minutes (for early acknowledgment)
+                // Show ACK button if alarm is triggered or if alarm time has passed and not yet acknowledged
                 let showAckButton = alarm.triggered;
-                if (alarm.enabled && !alarm.triggered && !alarm.acknowledgedAt) {
+                if (alarm.enabled && !alarm.acknowledgedAt) {
                     const alarmTotalMinutes = alarm.hour * 60 + alarm.minute;
                     let timeDiff = alarmTotalMinutes - currentTotalMinutes;
 
@@ -1148,8 +1173,9 @@
                         timeDiff += 24 * 60;
                     }
 
-                    // Show ack button if within 5 minutes
-                    if (timeDiff > 0 && timeDiff <= 5) {
+                    // Show ack button if within 5 minutes before or any time after alarm
+                    // (timeDiff <= 0 means alarm time has passed, timeDiff > 0 && <= 5 means within 5 min before)
+                    if (timeDiff <= 5) {
                         showAckButton = true;
                     }
                 }
@@ -1182,18 +1208,6 @@
             const currentTime = now.getTime();
 
             alarms.forEach(alarm => {
-                // Clear old acknowledgment if alarm time has passed (more than 10 minutes ago)
-                if (alarm.acknowledgedAt) {
-                    const timeSinceAck = currentTime - alarm.acknowledgedAt;
-                    const alarmTime = new Date();
-                    alarmTime.setHours(alarm.hour, alarm.minute, 0, 0);
-
-                    // If current time is more than 10 minutes past the alarm time, clear acknowledgment
-                    if (now.getTime() > alarmTime.getTime() + (10 * 60 * 1000)) {
-                        alarm.acknowledgedAt = null;
-                    }
-                }
-
                 // Only trigger if not already triggered and not recently acknowledged
                 if (alarm.enabled && alarm.hour === hours && alarm.minute === minutes && !alarm.triggered && !alarm.acknowledgedAt) {
                     alarm.triggered = true;
@@ -1344,8 +1358,28 @@
             updateHourLabels(isPM);
         }
 
+        // Function to clear acknowledged alarms (runs every 5 minutes)
+        function clearAcknowledgedAlarms() {
+            let hasChanges = false;
+            alarms.forEach(alarm => {
+                if (alarm.acknowledgedAt) {
+                    alarm.acknowledgedAt = null;
+                    hasChanges = true;
+                }
+            });
+
+            if (hasChanges) {
+                localStorage.setItem('alarms', JSON.stringify(alarms));
+                renderAlarms();
+                renderAlarmIndicators();
+            }
+        }
+
         updateClock();
         setInterval(updateClock, 1000);
+
+        // Run cleanup every 5 minutes (300000 milliseconds)
+        setInterval(clearAcknowledgedAlarms, 300000);
     </script>
 </body>
 </html>
