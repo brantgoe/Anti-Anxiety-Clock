@@ -656,6 +656,13 @@
                     return;
                 }
 
+                // Only show alarms that match the current AM/PM period
+                const currentIsPM = currentHour >= 12;
+                const alarmIsPM = alarm.hour >= 12;
+                if (currentIsPM !== alarmIsPM) {
+                    return;
+                }
+
                 if (!alarm.color) {
                     alarm.color = generateAlarmColor();
                 }
