@@ -1117,6 +1117,7 @@
                 alarm.enabled = !alarm.enabled;
                 localStorage.setItem('alarms', JSON.stringify(alarms));
                 renderAlarms();
+                renderAlarmIndicators();
             }
         }
 
@@ -1130,6 +1131,7 @@
                 alarm.acknowledgedAt = now.getTime();
                 localStorage.setItem('alarms', JSON.stringify(alarms));
                 renderAlarms();
+                renderAlarmIndicators();
             }
         }
 
@@ -1165,21 +1167,20 @@
                 const aAcked = !!a.acknowledgedAt;
                 const bAcked = !!b.acknowledgedAt;
 
-                // Priority 1: Triggered but not acknowledged (highest priority)
+                // Priority 1: Triggered AND not acknowledged (highest priority)
                 // Priority 2: Not triggered and not acknowledged
-                // Priority 3: Acknowledged (lowest priority)
-                const aPriority = aAcked ? 3 : (aTriggered ? 1 : 2);
-                const bPriority = bAcked ? 3 : (bTriggered ? 1 : 2);
+                // Priority 3: Acknowledged (regardless of triggered state) (lowest priority)
+                const aPriority = aAcked ? 3 : (aTriggered && !aAcked ? 1 : 2);
+                const bPriority = bAcked ? 3 : (bTriggered && !bAcked ? 1 : 2);
 
                 if (aPriority !== bPriority) {
                     return aPriority - bPriority;
                 }
 
-                // Within same priority, sort by next upcoming time
                 const aMinutes = a.hour * 60 + a.minute;
                 const bMinutes = b.hour * 60 + b.minute;
 
-                // Calculate time until alarm (handling day wrap-around)
+                // For all alarms (including acknowledged), sort by next upcoming time (with wrap-around)
                 let aTimeDiff = aMinutes - currentTotalMinutes;
                 let bTimeDiff = bMinutes - currentTotalMinutes;
 
@@ -1402,7 +1403,7 @@
             updateHourLabels(isPM);
         }
 
-        // Function to clear acknowledged alarms (runs every 5 minutes)
+        // Function to clear acknowledged alarms (runs every 12 hours)
         function clearAcknowledgedAlarms() {
             let hasChanges = false;
             alarms.forEach(alarm => {
@@ -1422,11 +1423,14 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // Run cleanup every 5 minutes (300000 milliseconds)
-        setInterval(clearAcknowledgedAlarms, 300000);
+        // Run cleanup every 12 hours (43200000 milliseconds)
+        setInterval(clearAcknowledgedAlarms, 43200000);
 
         // Refresh alarm markers every 0.5 seconds to check for acknowledged/disabled alarms
         setInterval(renderAlarmIndicators, 500);
+
+        // Update alarm list sorting every 15 seconds
+        setInterval(renderAlarms, 15000);
     </script>
 </body>
 </html>
