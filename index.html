@@ -1217,6 +1217,8 @@
                 checkAlarms(fullHours, roundedMinutes);
                 // Update alarm indicators when minute changes (to show/hide minute indicators)
                 renderAlarmIndicators();
+                // Update alarm list to show/hide acknowledge buttons
+                renderAlarms();
             }
         }
 
