@@ -621,6 +621,11 @@
             const alarmsByMinute = {};
 
             alarms.forEach(alarm => {
+                // Skip acknowledged alarms - don't show their indicators
+                if (alarm.acknowledgedAt) {
+                    return;
+                }
+
                 if (!alarm.color) {
                     alarm.color = generateAlarmColor();
                 }
