@@ -1424,6 +1424,9 @@
 
         // Run cleanup every 5 minutes (300000 milliseconds)
         setInterval(clearAcknowledgedAlarms, 300000);
+
+        // Refresh alarm markers every 0.5 seconds to check for acknowledged/disabled alarms
+        setInterval(renderAlarmIndicators, 500);
     </script>
 </body>
 </html>
