@@ -486,7 +486,7 @@
                         <div id="loginScreen" class="login-screen">
                             <h2>Admin Access</h2>
                             <p>Login to add or delete alarms</p>
-                            <input type="password" id="adminPassword" placeholder="Password">
+                            <input type="password" id="adminPassword" placeholder="Password" onkeypress="if(event.key === 'Enter') login()">
                             <button onclick="login()">Login</button>
                         </div>
 
