@@ -1416,6 +1416,46 @@
             }
         }
 
+        // Check for missed alarms when tab becomes visible
+        function checkMissedAlarms() {
+            const now = new Date();
+            const currentHours = now.getHours();
+            const currentMinutes = now.getMinutes();
+            const currentTotalMinutes = currentHours * 60 + currentMinutes;
+
+            let hasChanges = false;
+            alarms.forEach(alarm => {
+                if (!alarm.enabled || alarm.triggered || alarm.acknowledgedAt) return;
+
+                const alarmTotalMinutes = alarm.hour * 60 + alarm.minute;
+                const timeDiff = alarmTotalMinutes - currentTotalMinutes;
+
+                // If alarm should have triggered in the last 30 minutes, trigger it now
+                if (timeDiff < 0 && timeDiff >= -30) {
+                    alarm.triggered = true;
+                    hasChanges = true;
+                }
+            });
+
+            if (hasChanges) {
+                localStorage.setItem('alarms', JSON.stringify(alarms));
+                renderAlarms();
+                renderAlarmIndicators();
+            }
+        }
+
+        // Handle page visibility changes (when tab becomes visible/hidden)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // Tab just became visible - check for missed alarms
+                checkMissedAlarms();
+                // Force immediate update of clock and alarms
+                updateClock();
+                renderAlarms();
+                renderAlarmIndicators();
+            }
+        });
+
         updateClock();
         setInterval(updateClock, 1000);
 
