@@ -848,6 +848,9 @@
 
                 // Re-render alarms to show delete buttons
                 renderAlarms();
+
+                // Focus on alarm name input after login
+                document.getElementById('alarmName').focus();
             } else {
                 alert('Incorrect password');
                 document.getElementById('adminPassword').value = '';
@@ -874,6 +877,11 @@
         function toggleAdminSection() {
             const adminSection = document.getElementById('adminSection');
             adminSection.classList.toggle('hidden');
+
+            // If admin section is now visible, focus on password input
+            if (!adminSection.classList.contains('hidden')) {
+                document.getElementById('adminPassword').focus();
+            }
         }
 
         // Predefined distinct color palette (excluding red, yellow, green)
