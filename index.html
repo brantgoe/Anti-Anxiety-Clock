@@ -621,8 +621,8 @@
             const alarmsByMinute = {};
 
             alarms.forEach(alarm => {
-                // Skip acknowledged alarms - don't show their indicators
-                if (alarm.acknowledgedAt) {
+                // Skip disabled, triggered, or acknowledged alarms - don't show their indicators
+                if (!alarm.enabled || alarm.triggered || alarm.acknowledgedAt) {
                     return;
                 }
 
