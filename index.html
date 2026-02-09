@@ -1213,14 +1213,10 @@
                     const alarmTotalMinutes = alarm.hour * 60 + alarm.minute;
                     let timeDiff = alarmTotalMinutes - currentTotalMinutes;
 
-                    // Handle day wrap-around
-                    if (timeDiff < 0) {
-                        timeDiff += 24 * 60;
-                    }
-
-                    // Show ack button if within 5 minutes before or any time after alarm
-                    // (timeDiff <= 0 means alarm time has passed, timeDiff > 0 && <= 5 means within 5 min before)
-                    if (timeDiff <= 5) {
+                    // Show ACK button if:
+                    // 1. Within 5 minutes before the alarm (0 < timeDiff <= 5)
+                    // 2. Alarm has passed within last 30 minutes (-30 <= timeDiff <= 0)
+                    if ((timeDiff > 0 && timeDiff <= 5) || (timeDiff < 0 && timeDiff >= -30)) {
                         showAckButton = true;
                     }
                 }
