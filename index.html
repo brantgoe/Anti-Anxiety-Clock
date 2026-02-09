@@ -291,6 +291,23 @@
             padding: 20px;
         }
 
+        .admin-toggle-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .admin-toggle-btn:hover {
+            background: #2980b9;
+        }
+
         #clock {
             background: white;
             border-radius: 50%;
@@ -463,14 +480,17 @@
                 </div>
 
                 <div class="alarm-controls">
-                    <div id="loginScreen" class="login-screen">
-                        <h2>Admin Access</h2>
-                        <p>Login to add or delete alarms</p>
-                        <input type="password" id="adminPassword" placeholder="Password">
-                        <button onclick="login()">Login</button>
-                    </div>
+                    <button class="admin-toggle-btn" onclick="toggleAdminSection()">Admin Access</button>
 
-                    <div id="alarmFormSection" class="hidden">
+                    <div id="adminSection" class="hidden">
+                        <div id="loginScreen" class="login-screen">
+                            <h2>Admin Access</h2>
+                            <p>Login to add or delete alarms</p>
+                            <input type="password" id="adminPassword" placeholder="Password">
+                            <button onclick="login()">Login</button>
+                        </div>
+
+                        <div id="alarmFormSection" class="hidden">
                         <h2>Add Alarm</h2>
                         <div class="alarm-form">
                             <select id="alarmHour">
@@ -503,6 +523,7 @@
                         </div>
 
                         <button class="logout-btn" onclick="logout()">Logout</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -832,6 +853,12 @@
             document.getElementById('loginScreen').classList.remove('hidden');
             // Re-render alarms to hide delete buttons
             renderAlarms();
+        }
+
+        // Toggle admin section visibility
+        function toggleAdminSection() {
+            const adminSection = document.getElementById('adminSection');
+            adminSection.classList.toggle('hidden');
         }
 
         // Predefined distinct color palette (excluding red, yellow, green)
