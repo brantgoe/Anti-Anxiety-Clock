@@ -983,6 +983,9 @@
             const alarm = alarms.find(a => a.id === id);
             if (alarm) {
                 alarm.triggered = false;
+                // Store acknowledgment timestamp to prevent re-triggering
+                const now = new Date();
+                alarm.acknowledgedAt = now.getTime();
                 localStorage.setItem('alarms', JSON.stringify(alarms));
                 renderAlarms();
             }
@@ -1008,6 +1011,11 @@
                 return;
             }
 
+            const now = new Date();
+            const currentHours = now.getHours();
+            const currentMinutes = now.getMinutes();
+            const currentTotalMinutes = currentHours * 60 + currentMinutes;
+
             container.innerHTML = '';
             alarms.forEach(alarm => {
                 // Ensure alarm has a color (for backward compatibility)
@@ -1024,6 +1032,23 @@
 
                 const timeStr = formatTime(alarm.hour, alarm.minute);
 
+                // Check if alarm is within 5 minutes (for early acknowledgment)
+                let showAckButton = alarm.triggered;
+                if (alarm.enabled && !alarm.triggered && !alarm.acknowledgedAt) {
+                    const alarmTotalMinutes = alarm.hour * 60 + alarm.minute;
+                    let timeDiff = alarmTotalMinutes - currentTotalMinutes;
+
+                    // Handle day wrap-around
+                    if (timeDiff < 0) {
+                        timeDiff += 24 * 60;
+                    }
+
+                    // Show ack button if within 5 minutes
+                    if (timeDiff > 0 && timeDiff <= 5) {
+                        showAckButton = true;
+                    }
+                }
+
                 alarmDiv.innerHTML = `
                     <div class="alarm-info">
                         <div class="alarm-name">
@@ -1037,7 +1062,7 @@
                             <input type="checkbox" ${alarm.enabled ? 'checked' : ''} onchange="toggleAlarm(${alarm.id})">
                             <span class="toggle-slider"></span>
                         </label>
-                        ${alarm.triggered ? '<button class="ack-btn" onclick="acknowledgeAlarm(' + alarm.id + ')">Acknowledge</button>' : ''}
+                        ${showAckButton ? '<button class="ack-btn" onclick="acknowledgeAlarm(' + alarm.id + ')">Acknowledge</button>' : ''}
                         ${isLoggedIn ? '<button class="delete-btn" onclick="deleteAlarm(' + alarm.id + ')">Delete</button>' : ''}
                     </div>
                 `;
@@ -1048,8 +1073,24 @@
 
         // Check alarms
         function checkAlarms(hours, minutes) {
+            const now = new Date();
+            const currentTime = now.getTime();
+
             alarms.forEach(alarm => {
-                if (alarm.enabled && alarm.hour === hours && alarm.minute === minutes && !alarm.triggered) {
+                // Clear old acknowledgment if alarm time has passed (more than 10 minutes ago)
+                if (alarm.acknowledgedAt) {
+                    const timeSinceAck = currentTime - alarm.acknowledgedAt;
+                    const alarmTime = new Date();
+                    alarmTime.setHours(alarm.hour, alarm.minute, 0, 0);
+
+                    // If current time is more than 10 minutes past the alarm time, clear acknowledgment
+                    if (now.getTime() > alarmTime.getTime() + (10 * 60 * 1000)) {
+                        alarm.acknowledgedAt = null;
+                    }
+                }
+
+                // Only trigger if not already triggered and not recently acknowledged
+                if (alarm.enabled && alarm.hour === hours && alarm.minute === minutes && !alarm.triggered && !alarm.acknowledgedAt) {
                     alarm.triggered = true;
                     localStorage.setItem('alarms', JSON.stringify(alarms));
                     renderAlarms();
